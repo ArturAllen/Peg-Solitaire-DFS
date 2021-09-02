@@ -160,9 +160,9 @@ int main()
     setPegsMasks();
     board b=initialBoard();
 
-    maxResults=20000;
-    showAllResults=1;
-    showExploredNumber=1;
+    maxResults=1;         // The program will look for as many solutions as specified here
+    showAllResults=0;     // If this variable is set to 1 all solutions find will be shown
+    showExploredNumber=1; // If this variable is set to 1 the number of nodes explored will be shown at the end
     solve(b, 0);
 
     printBoard(b);
