@@ -4,7 +4,9 @@
 
 typedef uint64_t board;
 
-board movements[31];
+int jumps[31];
+
+long long int explored=0;
 
 void printBoard(board bd){
     for(int i=0; i<33; i++){
@@ -13,6 +15,11 @@ void printBoard(board bd){
         if(i==2||i==5||i==12||i==19||i==26||i==29||i==32) printf("\n");
     }
     printf("\n");
+}
+
+board initialBoard(){
+    board bd=~(1ull<<16);
+    return bd;
 }
 
 int down(int i){
@@ -62,47 +69,51 @@ int boardArray[11][11]={
     {0,0,0,0,0,0,0,0,0,0,0}
 };
 
+board masks[76];
+
+board pegs[76];
+
 int moves[76][3];
 
 int solved=0;
 
-void setMoves(){
+void setPegsMasks(){
     int currLine=0, boardPosition=0;
+    int next, nNext;
     for(int i=2; i<9; i++){
         for(int k=2; k<9; k++){
             if(boardArray[i][k]){
                 if(boardArray[i-1][k] && boardArray[i-2][k]){
-                    moves[currLine][0]=boardPosition;
-                    moves[currLine][1]=up(moves[currLine][0]);
-                    moves[currLine][2]=up(moves[currLine][1]);
+                    next=up(boardPosition);
+                    nNext=up(next);
+                    pegs[currLine]=1ull<<boardPosition | 1ull<<next;
+                    masks[currLine]=pegs[currLine] | 1ull<<nNext;
                     currLine++;
                 }
                 if(boardArray[i][k+1] && boardArray[i][k+2]){
-                    moves[currLine][0]=boardPosition;
-                    moves[currLine][1]=right(moves[currLine][0]);
-                    moves[currLine][2]=right(moves[currLine][1]);
+                    next=right(boardPosition);
+                    nNext=right(next);
+                    pegs[currLine]=1ull<<boardPosition | 1ull<<next;
+                    masks[currLine]=pegs[currLine] | 1ull<<nNext;
                     currLine++;
                 }if(boardArray[i+1][k] && boardArray[i+2][k]){
-                    moves[currLine][0]=boardPosition;
-                    moves[currLine][1]=down(moves[currLine][0]);
-                    moves[currLine][2]=down(moves[currLine][1]);
+                    next=down(boardPosition);
+                    nNext=down(next);
+                    pegs[currLine]=1ull<<boardPosition | 1ull<<next;
+                    masks[currLine]=pegs[currLine] | 1ull<<nNext;
                     currLine++;
                 }
                 if(boardArray[i][k-1] && boardArray[i][k-2]){
-                    moves[currLine][0]=boardPosition;
-                    moves[currLine][1]=left(moves[currLine][0]);
-                    moves[currLine][2]=left(moves[currLine][1]);
+                    next=left(boardPosition);
+                    nNext=left(next);
+                    pegs[currLine]=1ull<<boardPosition | 1ull<<next;
+                    masks[currLine]=pegs[currLine] | 1ull<<nNext;
                     currLine++;
                 }
                 boardPosition++;
             }
         }
     }
-}
-
-board initialBoard(){
-    board bd=~(1ull<<16);
-    return bd;
 }
 
 board setPosition(board bd, int pos, board setState){
@@ -114,42 +125,52 @@ int getPosition(board bd, int pos){
     return 1&(bd>>pos);
 }
 
-int isSolved(board b){
-    int count_1=0;
-    for(int i=0; i<33; i++){
-        if(getPosition(b, i)) count_1++;
-    }
-    return count_1==1;
+int solNum=0, maxResults=0, showAllResults=0, showExploredNumber=0;
+
+void showSolution(){
+    printf("%d> ", solNum);
+    for(int i=0;i<31; i++)
+        printf("%d ", jumps[i]);
+    printf("\n");
 }
 
 void solve(board b, int depth){
-    if(depth>31) return;
-    if(isSolved(b)){
-        solved=1;
+    if(showExploredNumber) explored++;
+    if(depth>30){
+        if(solNum>=maxResults-1)
+            solved=1;
+        if(showAllResults){
+            solNum++;
+            showSolution();
+        }
         return;
     }
-    board mask, trgt;
+
     for(int i=0; i<76; i++){
         if(solved) break;
-        trgt=(1ull<<moves[i][0]) | (1ull<<moves[i][1]);
-        mask=trgt | (1ull<<moves[i][2]);
-        if((mask&b)==trgt){
-            movements[depth]=mask;
-            solve(b^mask, depth+1);
+        if((masks[i]&b)==pegs[i]){
+            jumps[depth]=i;
+            solve(b^masks[i], depth+1);
         }
     }
 }
 
 int main()
 {
-    setMoves();
+    setPegsMasks();
     board b=initialBoard();
+
+    maxResults=20000;
+    showAllResults=1;
+    showExploredNumber=1;
     solve(b, 0);
+
     printBoard(b);
     for(int i=0; i<31; i++){
-        b=b^movements[i];
+        b=b^masks[jumps[i]];
         printBoard(b);
     }
+    if(showExploredNumber) printf("%d nodes explored\n", explored);
 
     return 0;
 }
