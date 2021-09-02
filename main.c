@@ -161,7 +161,7 @@ int main()
     board b=initialBoard();
 
     maxResults=1;         // The program will look for as many solutions as specified here
-    showAllResults=0;     // If this variable is set to 1 all solutions find will be shown
+    showAllResults=0;     // If this variable is set to 1 all solutions find will be shown (as a string of numbers which represent the index of each movement in the 'jumps' array)
     showExploredNumber=1; // If this variable is set to 1 the number of nodes explored will be shown at the end
     solve(b, 0);
 
